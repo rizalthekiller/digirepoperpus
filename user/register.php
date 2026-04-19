@@ -8,17 +8,30 @@ if (isset($_POST['register'])) {
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $dept = (int)$_POST['department_id'];
 
-    $sql = "INSERT INTO users (name, nim, email, password, role, is_verified, department_id) 
-            VALUES ('$name', '$nim', '$email', '$password', 'mahasiswa', 0, '$dept')";
+    // Check if NIM or Email already exists
+    $check_sql = "SELECT id, nim, email FROM users WHERE nim = '$nim' OR email = '$email'";
+    $check_result = $conn->query($check_sql);
 
-    if ($conn->query($sql) === TRUE) {
-        // Notify Admin
-        require_once '../includes/notification_service.php';
-        NotificationService::notifyAdminNewUser($name, $email);
-
-        $success = "Pendaftaran berhasil! Tunggu verifikasi admin.";
+    if ($check_result->num_rows > 0) {
+        $existing = $check_result->fetch_assoc();
+        if ($existing['nim'] == $nim) {
+            $error = "Pendaftaran Gagal: NIM $nim sudah terdaftar di sistem. Anda tidak dapat mengajukan akun lagi.";
+        } else {
+            $error = "Pendaftaran Gagal: Email $email sudah terdaftar di sistem. Anda tidak dapat mengajukan akun lagi.";
+        }
     } else {
-        $error = "Terjadi kesalahan: " . $conn->error;
+        $sql = "INSERT INTO users (name, nim, email, password, role, is_verified, department_id) 
+                VALUES ('$name', '$nim', '$email', '$password', 'mahasiswa', 0, '$dept')";
+
+        if ($conn->query($sql) === TRUE) {
+            // Notify Admin
+            require_once '../includes/notification_service.php';
+            NotificationService::notifyAdminNewUser($name, $email);
+
+            $success = "Pendaftaran berhasil! Tunggu verifikasi admin.";
+        } else {
+            $error = "Terjadi kesalahan: " . $conn->error;
+        }
     }
 }
 

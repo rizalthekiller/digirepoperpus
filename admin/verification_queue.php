@@ -23,8 +23,8 @@ if (isset($_POST['action'])) {
     $cert_number = isset($_POST['cert_number']) ? $conn->real_escape_string($_POST['cert_number']) : '';
     $cert_content = isset($_POST['cert_content']) ? $_POST['cert_content'] : ''; // Content can have HTML
 
-    // If rejected, mark as was_rejected = 1
-    $was_rejected_part = ($status == 'rejected') ? ", was_rejected = 1" : "";
+    // Jika menolak, tandai sebagai was_rejected = 1; jika menyetujui, reset flag ke 0
+    $was_rejected_part = ($status == 'rejected') ? ", was_rejected = 1" : ", was_rejected = 0";
     
     // If approving with certificate
     $v_hash = isset($_POST['verification_hash']) ? $conn->real_escape_string($_POST['verification_hash']) : "";
@@ -37,7 +37,7 @@ if (isset($_POST['action'])) {
         $cert_saved_content = $conn->real_escape_string($cert_content);
     }
 
-    $cert_part = (!empty($cert_number)) ? ", certificate_number = '$cert_number', verification_hash = '$v_hash', was_rejected = 0" : "";
+    $cert_part = (!empty($cert_number)) ? ", certificate_number = '$cert_number', verification_hash = '$v_hash'" : "";
 
     $sql = "UPDATE theses SET status = '$status', rejection_reason = '$reason' $was_rejected_part $cert_part WHERE id = '$thesis_id'";
     
@@ -46,6 +46,14 @@ if (isset($_POST['action'])) {
         $_SESSION['queue_msg'] = "<div class='alert alert-success border-0 shadow-sm'>
             <i class='fas fa-check-circle me-2'></i> $msg_text (Sistem sedang memproses pengiriman email di latar belakang)
         </div>";
+
+        if ($status == 'approved') {
+            $user_query = $conn->query("SELECT user_id FROM theses WHERE id = '$thesis_id'");
+            if ($user_row = $user_query->fetch_assoc()) {
+                $uid = $user_row['user_id'];
+                $conn->query("DELETE FROM theses WHERE user_id = '$uid' AND status = 'rejected' AND id != '$thesis_id'");
+            }
+        }
 
         // Fetch User and Thesis info
         $thesisQuery = $conn->query("SELECT t.title, t.year, u.email, u.name as author_name, u.nim, f.name as fac_name, d.name as dept_name 
@@ -227,7 +235,7 @@ $result = $conn->query($sql);
                                         <?php if($row['file_path']): ?>
                                             <button type="button" class="btn btn-sm btn-link p-0 small text-primary text-decoration-none preview-btn" 
                                                     data-bs-toggle="modal" data-bs-target="#previewModal" 
-                                                    data-file="../<?php echo $row['file_path']; ?>" 
+                                                    data-file="<?php echo htmlspecialchars('../' . ltrim($row['file_path'], '/')); ?>" 
                                                     data-title="<?php echo htmlspecialchars($row['title']); ?>">
                                                 <i class="fas fa-eye me-1"></i> Pratinjau Cepat
                                             </button>
@@ -286,7 +294,30 @@ $result = $conn->query($sql);
 
     <!-- Preview Modal -->
     <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
-        <!-- ... existing preview modal content ... -->
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header border-bottom-0 p-4">
+                    <h5 class="modal-title fw-bold" id="previewModalLabel">Pratinjau Cepat Skripsi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="p-4 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <div>
+                                <div class="text-muted small">Judul Skripsi</div>
+                                <div id="modal-thesis-title" class="fw-bold"></div>
+                            </div>
+                            <a id="download-link" class="btn btn-sm btn-primary" href="#" target="_blank" rel="noopener">
+                                <i class="fas fa-download me-1"></i> Unduh PDF
+                            </a>
+                        </div>
+                    </div>
+                    <div style="height:75vh; min-height:400px;">
+                        <iframe id="pdf-viewer" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Approve (Certificate) Modal -->

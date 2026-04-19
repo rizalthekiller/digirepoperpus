@@ -28,14 +28,61 @@ $site_logo = $settings['site_logo'] ?? '';
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card { border: none; border-radius: 15px; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        .badge-keyword { background-color: #e0e7ff; color: #4338ca; font-weight: 600; }
+        
+        /* Hero Section Improvements */
+        .bg-primary { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); position: relative; overflow: hidden; }
+        .bg-primary::before { content: ''; position: absolute; width: 500px; height: 500px; background: rgba(255,255,255,0.1); border-radius: 50%; right: -100px; top: -100px; }
+        .display-4 { font-size: 3.5rem !important; line-height: 1.1; letter-spacing: -0.02em; }
+        @media (max-width: 992px) { .display-4 { font-size: 2rem !important; } }
+        
+        /* Card Styles */
+        .card { border: none; border-radius: 15px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px rgba(0,0,0,0.1); }
+        .card.info-card { border-top: 4px solid #2563eb; }
+        .card.info-card:nth-child(2) { border-top-color: #16a34a; }
+        .card.info-card:nth-child(3) { border-top-color: #ca8a04; }
+        
+        /* Icon Box */
+        .icon-box { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+        .card:hover .icon-box { transform: scale(1.1) rotate(5deg); }
+        
+        /* Badge Keyword */
+        .badge-keyword { background-color: #e0e7ff; color: #4338ca; font-weight: 600; font-size: 0.75rem; padding: 0.35rem 0.65rem; }
+        
+        /* Buttons */
         .btn-masuk { border-radius: 30px; font-weight: 700; padding: 10px 30px; border: 2px solid #2563eb; color: #2563eb; transition: 0.3s; }
         .btn-masuk:hover { background: #2563eb; color: white; }
         .btn-daftar { border-radius: 30px; font-weight: 700; padding: 10px 30px; background: #2563eb; color: white; border: 2px solid #2563eb; transition: 0.3s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); }
         .btn-daftar:hover { background: #1d4ed8; border-color: #1d4ed8; color: white; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3); }
         .navbar-brand img { height: 45px; margin-right: 12px; }
+        
+        /* Collection Cards */
+        .collection-card { border: 1px solid #e2e8f0; transition: all 0.3s ease; }
+        .collection-card:hover { border-color: #2563eb; box-shadow: 0 15px 30px rgba(37, 99, 235, 0.15); }
+        .collection-card .card-title a { color: #0f172a; transition: color 0.2s; }
+        .collection-card:hover .card-title a { color: #2563eb; }
+        
+        /* Sidebar Styling */
+        .filter-sidebar { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .filter-sidebar h5 { font-size: 1.15rem; letter-spacing: -0.01em; }
+        .form-select, .form-select-sm { border-radius: 12px; border: 1.5px solid #e2e8f0; transition: all 0.2s; }
+        .form-select:focus, .form-select-sm:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        /* Section Headers */
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
+        .section-header i { font-size: 1.5rem; }
+        .section-header h2 { margin: 0; font-size: 2rem; letter-spacing: -0.015em; }
+        
+        /* Layout Improvements */
+        .hero-section { padding: 5rem 0; }
+        .info-section { padding: 4rem 0; }
+        .collection-section { padding: 3rem 0; }
+        
+        @media (max-width: 992px) {
+            .hero-section { padding: 3rem 0; }
+            .info-section { padding: 2.5rem 0; }
+            .collection-section { padding: 2rem 0; }
+        }
     </style>
 </head>
 <body>
@@ -48,7 +95,7 @@ $site_logo = $settings['site_logo'] ?? '';
     <?php endif; ?>
 
     <!-- Hero Section -->
-    <section class="bg-primary text-white py-5 mb-5 shadow-sm">
+    <section class="bg-primary text-white hero-section shadow-sm">
         <div class="container py-4">
             <div class="row align-items-center">
                 <div class="col-lg-7">
@@ -67,10 +114,10 @@ $site_logo = $settings['site_logo'] ?? '';
     </section>
 
     <!-- Information Section -->
-    <section class="container mb-5" id="prosedur">
+    <section class="container info-section" id="prosedur">
         <div class="row g-4 mb-5">
             <div class="col-md-4">
-                <div class="card p-4 h-100 border-0 shadow-sm" style="background: #eff6ff;">
+                <div class="card info-card p-4 h-100 border-0 shadow-sm" style="background: #eff6ff;">
                     <div class="icon-box bg-primary text-white mb-3 d-inline-flex align-items-center justify-content-center rounded-3" style="width: 50px; height: 50px;">
                         <i class="fas fa-user-plus"></i>
                     </div>
@@ -79,7 +126,7 @@ $site_logo = $settings['site_logo'] ?? '';
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card p-4 h-100 border-0 shadow-sm" style="background: #f0fdf4;">
+                <div class="card info-card p-4 h-100 border-0 shadow-sm" style="background: #f0fdf4;">
                     <div class="icon-box bg-success text-white mb-3 d-inline-flex align-items-center justify-content-center rounded-3" style="width: 50px; height: 50px;">
                         <i class="fas fa-file-upload"></i>
                     </div>
@@ -88,7 +135,7 @@ $site_logo = $settings['site_logo'] ?? '';
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card p-4 h-100 border-0 shadow-sm" style="background: #fefce8;">
+                <div class="card info-card p-4 h-100 border-0 shadow-sm" style="background: #fefce8;">
                     <div class="icon-box bg-warning text-dark mb-3 d-inline-flex align-items-center justify-content-center rounded-3" style="width: 50px; height: 50px;">
                         <i class="fas fa-certificate"></i>
                     </div>
@@ -136,12 +183,15 @@ $site_logo = $settings['site_logo'] ?? '';
         </div>
     </section>
 
-    <main class="container py-5" id="koleksi">
-        <h2 class="fw-bold mb-4"><i class="fas fa-search me-2 text-primary"></i>Jelajahi Koleksi</h2>
-        <div class="row">
+    <main class="container collection-section" id="koleksi">
+        <div class="section-header">
+            <i class="fas fa-search text-primary"></i>
+            <h2>Jelajahi Koleksi</h2>
+        </div>
+        <div class="row g-4">
             <!-- Sidebar Filters -->
             <div class="col-lg-3 mb-4">
-                <div class="card p-4 shadow-sm border-0 rounded-4 sticky-top" style="top: 100px;">
+                <div class="filter-sidebar card p-4 shadow-sm border-0 sticky-top" style="top: 100px;">
                     <h5 class="fw-bold mb-4">Filter Pencarian</h5>
                     <form action="index.php" method="GET">
                         <input type="hidden" name="q" value="<?php echo isset($_GET['q']) ? $_GET['q'] : ''; ?>">
@@ -251,38 +301,42 @@ $site_logo = $settings['site_logo'] ?? '';
                         while($row = $result->fetch_assoc()) {
                     ?>
                         <div class="col-md-6">
-                            <div class="card h-100 p-3">
+                            <div class="card collection-card h-100 p-4 border-1">
                                 <div class="card-body d-flex flex-column">
-                                    <div class="mb-2 d-flex gap-2">
-                                        <span class="badge bg-light text-primary border rounded-pill small"><?php echo $row['dept_name']; ?></span>
-                                        <span class="badge bg-primary text-white border rounded-pill small"><?php echo $row['type']; ?></span>
+                                    <div class="mb-3 d-flex gap-2 flex-wrap">
+                                        <span class="badge bg-light text-primary border rounded-pill small fw-bold"><?php echo $row['dept_name']; ?></span>
+                                        <span class="badge bg-primary text-white border rounded-pill small fw-bold"><?php echo $row['type']; ?></span>
                                     </div>
-                                    <h5 class="card-title fw-bold mb-2">
-                                        <a href="skripsi/detail.php?id=<?php echo $row['id']; ?>" class="text-decoration-none text-dark hover-primary"><?php echo $row['title']; ?></a>
+                                    <h5 class="card-title fw-bold mb-3" style="line-height: 1.4;">
+                                        <a href="skripsi/detail.php?id=<?php echo $row['id']; ?>" class="text-decoration-none hover-primary"><?php echo $row['title']; ?></a>
                                     </h5>
-                                    <p class="text-muted small mb-3">Oleh: <span class="fw-bold"><?php echo $row['author']; ?></span> • <?php echo $row['year']; ?></p>
-                                    <p class="card-text text-secondary small mb-4"><?php echo substr($row['abstract'], 0, 150); ?>...</p>
+                                    <p class="text-muted small mb-3"><i class="fas fa-user me-1"></i> <span class="fw-bold"><?php echo $row['author']; ?></span> • <i class="fas fa-calendar me-1"></i><?php echo $row['year']; ?></p>
+                                    <p class="card-text text-secondary small mb-4" style="line-height: 1.6;"><?php echo substr($row['abstract'], 0, 150); ?>...</p>
                                     
                                     <div class="mb-4">
                                         <?php if($row['file_path']): ?>
                                             <?php if(isset($_SESSION['user_id'])): ?>
-                                                <a href="<?php echo $row['file_path']; ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" download>
+                                                <a href="<?php echo $row['file_path']; ?>" class="btn btn-sm btn-primary text-white rounded-pill px-4 fw-bold me-2" download>
                                                     <i class="fas fa-download me-1"></i> Unduh PDF
                                                 </a>
                                             <?php else: ?>
-                                                <a href="user/login.php" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold">
-                                                    <i class="fas fa-lock me-1"></i> Login to Download
+                                                <a href="user/login.php" class="btn btn-sm btn-outline-secondary rounded-pill px-4 fw-bold me-2">
+                                                    <i class="fas fa-lock me-1"></i> Login
                                                 </a>
                                             <?php endif; ?>
                                         <?php endif; ?>
-                                        <a href="skripsi/detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-link text-decoration-none small text-muted">Lihat Detail</a>
+                                        <a href="skripsi/detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-link text-decoration-none small text-muted">Lihat Detail <i class="fas fa-arrow-right ms-1"></i></a>
                                     </div>
 
                                     <div class="mt-auto">
                                         <?php 
                                         $keywords = explode(',', $row['keywords']);
+                                        $count = 0;
                                         foreach($keywords as $kw) {
-                                            if(trim($kw)) echo '<span class="badge badge-keyword me-1 mb-1">#' . trim($kw) . '</span>';
+                                            if(trim($kw) && $count < 4) {
+                                                echo '<span class="badge badge-keyword me-1 mb-1">#' . trim($kw) . '</span>';
+                                                $count++;
+                                            }
                                         }
                                         ?>
                                     </div>
@@ -293,7 +347,8 @@ $site_logo = $settings['site_logo'] ?? '';
                         }
                     } else {
                         echo '<div class="col-12 text-center py-5">
-                                <h4 class="text-muted">Skripsi tidak ditemukan</h4>
+                                <i class="fas fa-search text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                                <h4 class="text-muted mt-3">Skripsi tidak ditemukan</h4>
                                 <p class="text-secondary">Coba sesuaikan filter atau kata kunci Anda.</p>
                               </div>';
                     }

@@ -74,19 +74,34 @@ $papers = $conn->query($sql);
             </div>
             <?php 
             if($is_verified == 1): 
-                $can_upload = true;
-                $chk_active = $conn->query("SELECT status FROM theses WHERE user_id = $user_id AND (status = 'pending' OR status = 'approved')");
-                if ($chk_active->num_rows > 0) $can_upload = false;
-
-                if ($can_upload): ?>
-                    <a href="../skripsi/tambah.php" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
-                        <i class="fas fa-plus me-2"></i> Unggah Karya Baru
-                    </a>
-                <?php else: ?>
-                    <button class="btn btn-secondary rounded-pill px-4 py-2 fw-bold shadow-sm" disabled title="Anda memiliki pengajuan aktif atau sudah disetujui">
-                        <i class="fas fa-lock me-2"></i> Unggah Dibatasi
-                    </button>
-                <?php endif; ?>
+                // Check if user already has a thesis (any status except approved)
+                $existing_thesis = $conn->query("SELECT id, status FROM theses WHERE user_id = $user_id ORDER BY created_at DESC LIMIT 1");
+                
+                if ($existing_thesis->num_rows > 0) {
+                    $thesis = $existing_thesis->fetch_assoc();
+                    if ($thesis['status'] == 'rejected') {
+                        // Show revise button for rejected thesis
+                        echo '<a href="../skripsi/edit.php?id=' . $thesis['id'] . '" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">';
+                        echo '<i class="fas fa-edit me-2"></i> Ajukan Revisi';
+                        echo '</a>';
+                    } elseif ($thesis['status'] == 'pending') {
+                        // Show edit button for pending thesis
+                        echo '<a href="../skripsi/edit.php?id=' . $thesis['id'] . '" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">';
+                        echo '<i class="fas fa-edit me-2"></i> Edit Pengajuan';
+                        echo '</a>';
+                    } else {
+                        // Disabled for other statuses
+                        echo '<button class="btn btn-secondary rounded-pill px-4 py-2 fw-bold shadow-sm" disabled title="Pengajuan Anda sudah disetujui">';
+                        echo '<i class="fas fa-lock me-2"></i> Terbatas';
+                        echo '</button>';
+                    }
+                } else {
+                    // No existing thesis, show upload button
+                    echo '<a href="../skripsi/tambah.php" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">';
+                    echo '<i class="fas fa-plus me-2"></i> Unggah Karya Baru';
+                    echo '</a>';
+                }
+            ?>
             <?php endif; ?>
         </div>
 

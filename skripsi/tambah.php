@@ -15,26 +15,36 @@ if ($_SESSION['is_verified'] == 0 && $_SESSION['role'] != 'admin') {
     </div>");
 }
 
-// Aturan Baru: Maksimal 1 unggahan aktif atau approved
+// Check: Mahasiswa hanya boleh 1 karya aktif. Jika ada thesis (pending/rejected), harus revisi dulu
 $user_id = $_SESSION['user_id'];
-$check_sql = "SELECT status FROM theses WHERE user_id = '$user_id' AND (status = 'pending' OR status = 'approved')";
-$check_res = $conn->query($check_sql);
+$existing_thesis = $conn->query("SELECT id, status FROM theses WHERE user_id = '$user_id' ORDER BY created_at DESC LIMIT 1");
 
-if ($check_res->num_rows > 0) {
-    $existing = $check_res->fetch_assoc();
-    $status_msg = $existing['status'] == 'pending' ? "sedang dalam proses verifikasi admin" : "sudah disetujui (maksimal 1 karya per akun)";
-    die("<div style='font-family: Arial; padding: 50px; text-align: center;'>
-        <h2 style='color: #1e3a8a;'>Unggah Dibatasi</h2>
-        <p>Anda belum bisa mengunggah karya baru karena karya sebelumnya <b>$status_msg</b>.</p>
-        <p>Jika karya sebelumnya ditolak, Anda bisa melakukan revisi melalui dashboard.</p>
-        <a href='../user/dashboard.php' style='color: #1e3a8a; font-weight: bold;'>Ke Dashboard</a>
-    </div>");
+if ($existing_thesis->num_rows > 0) {
+    $thesis = $existing_thesis->fetch_assoc();
+    
+    if ($thesis['status'] == 'pending') {
+        die("<div style='font-family: Arial; padding: 50px; text-align: center;'>
+            <h2 style='color: #1e3a8a;'>Unggah Dibatasi</h2>
+            <p>Anda memiliki pengajuan yang sedang dalam proses verifikasi admin.</p>
+            <p>Silakan tunggu atau <b>edit/update pengajuan Anda</b> melalui link berikut:</p>
+            <p style='margin-top: 20px;'><a href='edit.php?id=" . $thesis['id'] . "' style='background: #1e3a8a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Edit Pengajuan</a></p>
+            <p><a href='../user/dashboard.php' style='color: #1e3a8a; font-weight: bold;'>Kembali ke Dashboard</a></p>
+        </div>");
+    } elseif ($thesis['status'] == 'rejected') {
+        die("<div style='font-family: Arial; padding: 50px; text-align: center;'>
+            <h2 style='color: #dc3545;'>Pengajuan Ditolak</h2>
+            <p>Pengajuan skripsi Anda <b>ditolak</b>. Anda harus melakukan <b>revisi</b> sebelum mengajukan yang baru.</p>
+            <p style='margin-top: 20px;'><a href='edit.php?id=" . $thesis['id'] . "' style='background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Ajukan Revisi Sekarang</a></p>
+            <p><a href='../user/dashboard.php' style='color: #1e3a8a; font-weight: bold;'>Kembali ke Dashboard</a></p>
+        </div>");
+    }
+    // If approved, allow new upload (user can have multiple approved works)
 }
 
-if (isset($_POST['submit'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $conn->real_escape_string($_POST['title']);
     $type = $conn->real_escape_string($_POST['type']);
-    $year = $conn->real_escape_string($_POST['year']);
+    $year = (int)$_POST['year']; // Proper type casting
     $abstract = $conn->real_escape_string($_POST['abstract']);
     $keywords = $conn->real_escape_string($_POST['keywords']);
     $supervisor_name = $conn->real_escape_string($_POST['supervisor_name']);
@@ -49,6 +59,7 @@ if (isset($_POST['submit'])) {
     
     $original_name = basename($_FILES["file"]["name"]);
     $file_extension = strtolower(pathinfo($original_name, PATHINFO_EXTENSION));
+    $uploadOk = 1;
     
     // Security: Validate file extension and secondary extensions
     $forbidden_extensions = ['php', 'php3', 'php4', 'php5', 'phtml', 'exe', 'sh', 'js'];
@@ -71,7 +82,8 @@ if (isset($_POST['submit'])) {
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mime = finfo_file($finfo, $_FILES["file"]["tmp_name"]);
         finfo_close($finfo);
-        if ($mime != "application/pdf") {
+        // Check if MIME type contains 'pdf' (handles variations like "application/pdf; charset=binary")
+        if (stripos($mime, 'pdf') === false) {
             $error = "Konten file bukan merupakan PDF yang valid (Mime: $mime).";
             $uploadOk = 0;
         }
@@ -146,14 +158,28 @@ if (isset($_POST['submit'])) {
                         <h2 class="fw-bold mb-0">Unggah Skripsi Baru</h2>
                     </div>
 
-                    <?php if(isset($success)): ?>
-                        <div class="alert alert-success border-0 rounded-3 mb-4 fw-bold shadow-sm">
-                            <i class="fas fa-check-circle me-2"></i> <?php echo $success; ?>
+                    <?php if(!empty($success)): ?>
+                        <div class="alert alert-success border-0 border-start border-success rounded-0 mb-4 shadow-sm alert-dismissible fade show" role="alert" style="border-left: 4px solid #198754; background-color: #f1f9f6;">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-check-circle me-3" style="color: #198754; font-size: 1.2rem; margin-top: 2px;"></i>
+                                <div>
+                                    <strong>Berhasil!</strong>
+                                    <div><?php echo htmlspecialchars($success); ?></div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     <?php endif; ?>
-                    <?php if(isset($error)): ?>
-                        <div class="alert alert-danger border-0 rounded-3 mb-4 fw-bold shadow-sm">
-                            <i class="fas fa-exclamation-triangle me-2"></i> <?php echo $error; ?>
+                    <?php if(!empty($error)): ?>
+                        <div class="alert alert-danger border-0 border-start border-danger rounded-0 mb-4 shadow-sm alert-dismissible fade show" role="alert" style="border-left: 4px solid #dc3545; background-color: #fdf8f8;">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-exclamation-triangle me-3" style="color: #dc3545; font-size: 1.2rem; margin-top: 2px;"></i>
+                                <div>
+                                    <strong>Terjadi Kesalahan!</strong>
+                                    <div><?php echo htmlspecialchars($error); ?></div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     <?php endif; ?>
 
@@ -174,6 +200,7 @@ if (isset($_POST['submit'])) {
                             <div class="col-md-4">
                                 <label class="form-label fw-bold text-secondary">Nama Pembimbing</label>
                                 <input type="text" name="supervisor_name" class="form-control" placeholder="Nama lengkap & gelar" required>
+                                <small class="text-muted" style="font-size: 0.75rem;">Gunakan tanda koma (,) atau titik koma (;) untuk lebih dari satu pembimbing.</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold text-secondary">Tahun Lulus</label>
@@ -187,14 +214,15 @@ if (isset($_POST['submit'])) {
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-secondary">Kata Kunci</label>
-                                <input type="text" name="keywords" class="form-control" placeholder="AI, Machine Learning, Web Development (pisahkan dengan koma)" required>
+                                <input type="text" name="keywords" class="form-control" placeholder="AI, Machine Learning, Web Development" required>
+                                <small class="text-muted" style="font-size: 0.75rem;">Gunakan tanda koma (,) untuk memisahkan lebih dari satu kata kunci.</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-secondary">File Dokumen (PDF)</label>
                                 <input type="file" name="file" class="form-control" accept=".pdf" required>
                             </div>
                         </div>
-                        <button type="submit" name="submit" class="btn btn-primary w-100">
+                        <button type="submit" name="submit" class="btn btn-primary w-100" <?php echo !empty($success) ? 'disabled' : ''; ?>>
                             <i class="fas fa-paper-plane me-2"></i> Ajukan Skripsi
                         </button>
                     </form>
